@@ -42,7 +42,7 @@ jobs:
           echo "GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}" >> .env
 
       - name: Process PDFs
-        run: npx ts-node --esm scripts/process-pdfs.ts
+        run: npx ts-node scripts/process-pdfs.ts
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
