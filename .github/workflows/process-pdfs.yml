@@ -37,12 +37,14 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}" > .env
-          echo "GOOGLE_DRIVE_CREDENTIALS=$(echo ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_B64 }} | base64 --decode)" >> .env
-          echo "GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}" >> .env
+          cat > .env << EOF
+          CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
+          GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'
+          GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+          EOF
 
       - name: Process PDFs
-        run: npx ts-node scripts/process-pdfs.ts
+        run: npx ts-node --project tsconfig.node.json scripts/process-pdfs.ts
         env:
           CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
           GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}

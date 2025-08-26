@@ -1,0 +1,51 @@
+name: Test Google Drive Connection
+
+on:
+  workflow_dispatch:
+    # Permitir ejecución manual
+    inputs:
+      folder_id:
+        description: 'Google Drive Folder ID (opcional)'
+        required: false
+        type: string
+
+jobs:
+  test-drive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'
+          GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+          EOF
+
+      - name: Test Google Drive Connection
+        run: npx ts-node --project tsconfig.node.json scripts/test-drive-connection.ts
+        env:
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+
+      - name: Test Results
+        if: always()
+        run: |
+          echo "✅ Test completado"
+          echo "📊 Revisa los logs arriba para ver los resultados"

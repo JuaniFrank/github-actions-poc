@@ -13,9 +13,12 @@
     "format": "prettier --write .",
     "prepare": "husky",
     "test": "jest",
-    "process-pdfs": "ts-node --esm scripts/process-pdfs.ts",
-    "process-pdfs:dev": "ts-node --esm scripts/process-pdfs.ts",
-    "cleanup": "ts-node --esm scripts/cleanup.ts"
+    "process-pdfs": "ts-node --project tsconfig.node.json scripts/process-pdfs.ts",
+    "process-pdfs:dev": "ts-node --project tsconfig.node.json scripts/process-pdfs.ts",
+    "cleanup": "ts-node --project tsconfig.node.json scripts/cleanup.ts",
+    "test-drive": "ts-node --project tsconfig.node.json scripts/test-drive-connection.ts",
+    "test-claude": "ts-node --project tsconfig.node.json scripts/test-claude-connection.ts",
+    "test-all": "ts-node --project tsconfig.node.json scripts/test-all-connections.ts"
   },
   "dependencies": {
     "next": "15.3.3",

@@ -1,0 +1,53 @@
+name: Test All Connections
+
+on:
+  workflow_dispatch:
+    # Permitir ejecución manual
+    inputs:
+      folder_id:
+        description: 'Google Drive Folder ID (opcional)'
+        required: false
+        type: string
+
+jobs:
+  test-connections:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
+          GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'
+          GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+          EOF
+
+      - name: Test All Connections
+        run: npx ts-node --project tsconfig.node.json scripts/test-all-connections.ts
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+
+      - name: Test Results
+        if: always()
+        run: |
+          echo "✅ Test de conexiones completado"
+          echo "📊 Revisa los logs arriba para ver los resultados detallados"
