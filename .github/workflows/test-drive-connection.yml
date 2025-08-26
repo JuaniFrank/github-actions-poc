@@ -36,8 +36,11 @@ jobs:
           echo "GOOGLE_DRIVE_CREDENTIALS=$(echo ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_B64 }} | base64 --decode)" > .env
           echo "GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}" >> .env
 
+      - name: Compile TypeScript
+        run: pnpm exec tsc -p tsconfig.node.json
+
       - name: Test Google Drive Connection
-        run: pnpm exec ts-node --project tsconfig.node.json scripts/test-drive-connection.ts
+        run: node dist/scripts/test-drive-connection.js
 
       - name: Test Results
         if: always()
