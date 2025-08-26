@@ -33,16 +33,11 @@ jobs:
 
       - name: Create .env file
         run: |
-          cat > .env << EOF
-          GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'
-          GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
-          EOF
+          echo "GOOGLE_DRIVE_CREDENTIALS=$(echo ${{ secrets.GOOGLE_DRIVE_CREDENTIALS_B64 }} | base64 --decode)" > .env
+          echo "GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}" >> .env
 
       - name: Test Google Drive Connection
-        run: npx ts-node --project tsconfig.node.json scripts/test-drive-connection.ts
-        env:
-          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
-          GOOGLE_DRIVE_FOLDER_ID: ${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+        run: pnpm exec ts-node --project tsconfig.node.json scripts/test-drive-connection.ts
 
       - name: Test Results
         if: always()
