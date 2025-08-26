@@ -1,0 +1,92 @@
+name: Process PDFs from Google Drive
+
+on:
+  schedule:
+    # Ejecutar cada hora
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    # Permitir ejecución manual
+    inputs:
+      folder_id:
+        description: 'Google Drive Folder ID (opcional)'
+        required: false
+        type: string
+
+jobs:
+  process-pdfs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          CLAUDE_API_KEY=${{ secrets.CLAUDE_API_KEY }}
+          GOOGLE_DRIVE_CREDENTIALS='${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}'
+          GOOGLE_DRIVE_FOLDER_ID=${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+          EOF
+
+      - name: Process PDFs
+        run: npx ts-node --esm scripts/process-pdfs.ts
+        env:
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ github.event.inputs.folder_id || secrets.GOOGLE_DRIVE_FOLDER_ID || '' }}
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "🤖 Auto-update: Nuevos reportes generados desde PDFs
+
+          - Archivos procesados automáticamente
+          - Reportes generados con Claude AI
+          - Componentes React actualizados
+          
+          Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git push
+
+      - name: Deploy to Vercel
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "✅ Procesamiento de PDFs completado exitosamente"
+          echo "📊 Nuevos reportes generados y desplegados"
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "❌ Error en el procesamiento de PDFs"
+          echo "🔍 Revisar logs para más detalles"
