@@ -15,7 +15,7 @@ on:
 jobs:
   process-pdfs:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,10 +26,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: Create .env file
         run: |
@@ -66,7 +71,7 @@ jobs:
           - Archivos procesados automáticamente
           - Reportes generados con Claude AI
           - Componentes React actualizados
-          
+
           Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
           git push
 
